@@ -94,4 +94,4 @@ jobs:
         with:
           to: ${{ secrets.MY_TELEGRAM_ID }}
           token: ${{ secrets.DEPLOY_ANNOUNCER_BOT_TOKEN }}
-          message: Деплой проекта Foodgram выполнен успешно!
+          message: Деплой Foodgram выполнен успешно!
