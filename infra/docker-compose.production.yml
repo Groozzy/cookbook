@@ -5,6 +5,7 @@ services:
     image: groozzy/foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
+      - media:/var/www/foodgram/media
 
   db:
     image: postgres:13.0-alpine
