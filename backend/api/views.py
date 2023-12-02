@@ -3,19 +3,17 @@ from django.db.models import F, Sum
 from django.db.utils import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from djoser.views import UserViewSet as DjoserUserViewSet
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-
 from api import paginators, permissions, serializers, filters
 from recipes.models import Favorite, Ingredient, Recipe, Tag, ShoppingCart
 from users.models import Subscription
-
 
 User = get_user_model()
 

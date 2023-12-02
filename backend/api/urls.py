@@ -3,7 +3,6 @@ from rest_framework.routers import DefaultRouter
 
 from api import views
 
-
 router = DefaultRouter()
 router.register('tags', views.TagViewSet, 'tags')
 router.register('ingredients', views.IngredientViewSet, 'ingredients')
