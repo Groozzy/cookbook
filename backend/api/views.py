@@ -10,9 +10,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-
-from api import paginators, permissions, serializers, filters
-from recipes.models import Favorite, Ingredient, Recipe, Tag, ShoppingCart
+from api import filters, paginators, permissions, serializers
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from users.models import Subscription
 
 User = get_user_model()

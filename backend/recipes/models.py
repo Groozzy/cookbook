@@ -3,7 +3,6 @@ from django.core import validators
 from django.db import models
 from django.utils.translation import gettext_lazy
 
-
 User = get_user_model()
 
 
