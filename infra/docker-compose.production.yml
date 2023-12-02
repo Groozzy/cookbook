@@ -15,7 +15,7 @@ services:
       - ../.env
 
   backend:
-    build: groozzy/foodgram_backend
+    image: groozzy/foodgram_backend
     restart: always
     environment:
       PYTHONUNBUFFERED: 1
