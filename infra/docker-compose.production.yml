@@ -21,7 +21,7 @@ services:
       PYTHONUNBUFFERED: 1
     volumes:
       - static_dir:/app/static/
-      - media_dir:/app/media/
+      - media_dir:/var/www/foodgram/media
     env_file:
       - ../.env
     depends_on:
