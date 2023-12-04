@@ -29,7 +29,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1 localhost').split()
 
 ROOT_URLCONF = 'backend.urls'
 
-CSRF_TRUSTED_ORIGINS = (os.getenv('PROJECT_URL'),)
+CSRF_TRUSTED_ORIGINS = (os.getenv('PROJECT_URL', ''),)
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
