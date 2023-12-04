@@ -41,7 +41,7 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-        read_only_fields = ('__all__',)
+        read_only_fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class SubscriptionSerializer(UserSerializer):
@@ -51,27 +51,22 @@ class SubscriptionSerializer(UserSerializer):
     class Meta:
         model = User
         exclude = ('password',)
-        read_only_fields = ('__all__',)
+        read_only_fields = ('recipes_count',)
 
-    def get_is_subscribed(self, obj):
-        return True
-
-    def get_recipes_count(self, user):
-        return user.recipes.count()
+    def get_recipes_count(self, author):
+        return author.recipes.count()
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
-        read_only_fields = ('__all__',)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = '__all__'
-        read_only_fields = ('__all__',)
 
 
 class Base64ImageField(serializers.ImageField):
@@ -106,14 +101,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
-    def get_ingredients(self, recipe):
-        return recipe.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=F('recipe__amount'),
-        )
-
     def get_is_favorited(self, recipe):
         user = self.context.get('request').user
         if user.is_anonymous:
@@ -126,14 +113,20 @@ class RecipeSerializer(serializers.ModelSerializer):
             return False
         return user.shopping_cart.filter(recipe=recipe).exists()
 
+    def get_ingredients(self, recipe):
+        return AmountIngredient.objects.filter(recipe=recipe).values(
+            'id', 'amount', name=F('ingredient__name'),
+            measurement_unit=F('ingredient__measurement_unit'))
+
     def validate(self, data):
         tags_ids = self.initial_data.get('tags')
         ingredients = self.initial_data.get('ingredients')
-        if not tags_ids or not ingredients:
-            raise ValidationError('Недостаточно данных')
+        if not tags_ids:
+            raise ValidationError('У рецепта должен хотя бы один тег!')
+        if not ingredients:
+            raise ValidationError('У рецепта должен хотя бы один ингредиент!')
         tags = tags_exist_validator(tags_ids, Tag)
         ingredients = ingredients_validator(ingredients, Ingredient)
-
         data.update({'tags': tags,
                      'ingredients': ingredients,
                      'author': self.context.get('request').user})
@@ -144,19 +137,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-
-        AmountIngredient.objects.bulk_create(
-            AmountIngredient(recipe=recipe,
-                             ingredients=ingredient,
-                             amount=amount)
-            for ingredient, amount in ingredients.values()
-        )
+        self._add_ingredients(recipe, ingredients)
         return recipe
 
     def update(self, recipe, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-
         for key, value in validated_data.items():
             if hasattr(recipe, key):
                 setattr(recipe, key, value)
@@ -164,10 +150,13 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe.tags.clear()
             recipe.tags.set(tags)
         if ingredients:
-            recipe.ingredients.clear()
-            AmountIngredient.objects.bulk_create(
-                AmountIngredient(recipe.pk, ingredient, amount)
-                for ingredient, amount in ingredients.values())
-
+            AmountIngredient.objects.filter(recipe=recipe).all().delete()
+            self._add_ingredients(recipe, ingredients)
         recipe.save()
         return recipe
+
+    def _add_ingredients(self, recipe, ingredients):
+        AmountIngredient.objects.bulk_create(
+            AmountIngredient(
+                recipe=recipe, ingredient=ingredient, amount=amount)
+            for ingredient, amount in ingredients.values())

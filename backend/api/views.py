@@ -5,6 +5,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -23,17 +26,19 @@ class UserViewSet(DjoserUserViewSet):
     serializer_class = serializers.UserSerializer
     pagination_class = paginators.LimitedPagePagination
 
-    @action(detail=True, methods=['post', 'delete'],
+    @action(detail=True, methods=('post',),
             permission_classes=(IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs.get('id'))
-        if request.method == 'POST':
-            Subscription.objects.create(
-                user=request.user, author=author)
-            serializer = serializers.SubscriptionSerializer(
-                author, data=request.data, context={'request': request})
-            serializer.is_valid()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        Subscription.objects.create(user=request.user, author=author)
+        serializer = serializers.SubscriptionSerializer(
+            author, data=request.data, context={'request': request})
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def unsubscribe(self, request, **kwargs):
+        author = get_object_or_404(User, id=kwargs.get('id'))
         subscription = get_object_or_404(
             Subscription, user=request.user, author=author)
         subscription.delete()
@@ -70,24 +75,18 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = filters.RecipeFilter
 
-    @action(detail=True, permission_classes=(IsAuthenticated,))
+    @action(detail=True, methods=('post',),
+            permission_classes=(IsAuthenticated,))
     def favorite(self, request, pk):
-        ...
-
-    @favorite.mapping.post
-    def recipe_to_favorites(self, request, pk):
         return self._add_recipe(Favorite, request, pk)
 
     @favorite.mapping.delete
-    def remove_recipe_from_favorites(self, request, pk):
+    def unfavorite(self, request, pk):
         return self._remove_recipe(Favorite, request, pk)
 
-    @action(detail=True, permission_classes=(IsAuthenticated,))
+    @action(detail=True, methods=('post',),
+            permission_classes=(IsAuthenticated,))
     def shopping_cart(self, request, pk):
-        ...
-
-    @shopping_cart.mapping.post
-    def recipe_to_cart(self, request, pk):
         return self._add_recipe(ShoppingCart, request, pk)
 
     @shopping_cart.mapping.delete
@@ -116,19 +115,41 @@ class RecipeViewSet(ModelViewSet):
         user = self.request.user
         if not user.shopping_cart.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        shopping_list = '\n'.join(
-            (
-                f'{ingredient["name"]}: '
-                f'{ingredient["amount"]} '
-                f'{ingredient["measurement"]}'
-                for ingredient in Ingredient.objects.filter(
-                    recipe__recipe__in_carts__user=user
-                ).values('name', measurement=F('measurement_unit'))
-                .annotate(amount=Sum('recipe__amount'))
-            )
+        shopping_list = (
+            f'{ingredient["name"]}: '
+            f'{ingredient["amount"]} '
+            f'{ingredient["measurement"]}'
+            for ingredient in Ingredient.objects.filter(
+                recipe__recipe__in_carts__user=user
+            ).values('name', measurement=F('measurement_unit'))
+            .annotate(amount=Sum('recipe__amount'))
         )
-        response = HttpResponse(shopping_list,
+        return self.__shopping_list_to_pdf(shopping_list)
+
+    @staticmethod
+    def __shopping_list_to_pdf(shopping_list, font='Westhorn'):
+        pdfmetrics.registerFont(TTFont(font, f'data/{font}.ttf', 'UTF-8'))
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = (
+            'attachment;  filename=shopping_list.pdf')
+
+        page = canvas.Canvas(response)
+        height = 800
+        page.setFont(font, size=24)
+        page.drawString(200, height, 'Список покупок')
+        height -= 50
+        page.setFont(font, size=16)
+        for ingredient in shopping_list:
+            page.drawString(75, height, ingredient)
+            height -= 25
+        page.showPage()
+        page.save()
+        return response
+
+    @staticmethod
+    def __shopping_list_to_txt(shopping_list):
+        response = HttpResponse('\n'.join(shopping_list),
                                 content_type='text.txt; charset=utf-8')
         response['Content-Disposition'] = (
-            f'attachment; filename={user.username}_shopping_list.txt')
+            'attachment; filename=shopping_list.txt')
         return response

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'colorfield',
     'djoser',
     'django_filters',
     'api.apps.ApiConfig',
@@ -144,8 +145,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
-MEDIA_URL = 'https://foodgram.servepics.com/media/'
-MEDIA_ROOT = '/var/www/foodgram/media'
+MEDIA_URL = '/media/'
+# MEDIA_URL = 'https://foodgram.servepics.com/media/'
+MEDIA_ROOT = BASE_DIR / '/media'
+# MEDIA_ROOT = '/var/www/foodgram/media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
