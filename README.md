@@ -18,7 +18,7 @@
 
 ## Запуск проекта
 
-- Склонируйте репозиторй
+- Склонируйте репозиторий
 
 ```text
 git@github.com:Groozzy/foodgram-project-react.git
