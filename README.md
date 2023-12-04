@@ -54,7 +54,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 mkdir foodgram && cd foodgram/
 ```
 
-- Сойздайте env-файл:
+- Создайте env-файл:
 
 ```text
 touch .env
