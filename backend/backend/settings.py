@@ -29,7 +29,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1 localhost').split()
 
 ROOT_URLCONF = 'backend.urls'
 
-CSRF_TRUSTED_ORIGINS = ['https://foodgram.servepics.com',]
+CSRF_TRUSTED_ORIGINS = ('https://foodgram.servepics.com',)
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
