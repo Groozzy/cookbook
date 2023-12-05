@@ -2,31 +2,45 @@ from django.contrib.auth.models import AbstractUser
 from django.core import validators
 from django.db import models
 
+from users import enums
+
 
 class User(AbstractUser):
-    first_name = models.CharField('Имя', max_length=32)
-    last_name = models.CharField('Фамилия', max_length=32)
+    first_name = models.CharField(
+        'Имя',
+        max_length=enums.UserEnums.FIRST_NAME_MAX_LEN
+    )
+    last_name = models.CharField(
+        'Фамилия',
+        max_length=enums.UserEnums.LAST_NAME_MAX_LEN
+    )
     username = models.CharField(
         'Логин',
-        max_length=32,
+        max_length=enums.UserEnums.USERNAME_MAX_LEN,
         unique=True,
         validators=(
             validators.RegexValidator(
                 r'^[\w]+$', 'Логин содержит запрещённый символ!'
             ),
-            validators.MinLengthValidator(3, 'Логин слишком короткий'),
+            validators.MinLengthValidator(
+                enums.UserEnums.USERNAME_MIN_LEN,
+                'Логин слишком короткий'
+            ),
         )
     )
     password = models.CharField(
         'Пароль',
-        max_length=128,
+        max_length=enums.UserEnums.PASSWORD_MAX_LEN,
         validators=(
-            validators.MinLengthValidator(8, 'Пароль слишком короткий!'),
+            validators.MinLengthValidator(
+                enums.UserEnums.PASSWORD_MIN_LEN,
+                'Пароль слишком короткий!'
+            ),
         )
     )
     email = models.EmailField(
         'Почта',
-        max_length=256,
+        max_length=enums.UserEnums.EMAIL_MAX_LEN,
         unique=True,
         validators=(
             validators.EmailValidator('Введите корректный почтовый адрес!'),
