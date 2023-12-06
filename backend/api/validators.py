@@ -15,6 +15,8 @@ def ingredients_validator(ingredients, ingredient_model):
         validated_ingredients[ingredient['id']] = int(ingredient['amount'])
         if validated_ingredients[ingredient['id']] <= 0:
             raise ValidationError('Количество должно быть больше нуля')
+        elif validated_ingredients[ingredient['id']] >= 10000:
+            raise ValidationError('У меня столько посуды нет!')
 
     if not validated_ingredients:
         raise ValidationError('Корректные ингредиенты отсутствуют')

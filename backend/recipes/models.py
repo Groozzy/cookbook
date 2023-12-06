@@ -135,6 +135,10 @@ class AmountIngredient(models.Model):
                 enums.AmountIngredientEnums.AMOUNT_MIN_VALUE,
                 'Укажите количество!'
             ),
+            validators.MaxValueValidator(
+                enums.AmountIngredientEnums.AMOUNT_MAX_VALUE,
+                'У меня столько посуды нет!'
+            ),
         )
     )
 

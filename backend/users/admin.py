@@ -10,7 +10,7 @@ class UserAdmin(admin.ModelAdmin):
 
     @admin.display(description='Количество подписчиков')
     def subscribed(self, user):
-        return user.subscribers.count()
+        return user.subscribing.count()
 
 
 @admin.register(models.Subscription)

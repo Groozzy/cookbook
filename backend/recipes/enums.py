@@ -22,3 +22,4 @@ class RecipeEnums(IntEnum):
 class AmountIngredientEnums(IntEnum):
     AMOUNT_DEFAULT_VALUE = 1
     AMOUNT_MIN_VALUE = 1
+    AMOUNT_MAX_VALUE = 10000
